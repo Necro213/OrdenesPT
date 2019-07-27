@@ -23,6 +23,9 @@ class Orden extends Migration
             $table->longText('descripcion');
             $table->longText('fotos');
             $table->string('firma');
+            $table->boolean('cerrada');
+            $table->string('precio');
+            $table->longText('comentarios')->nulleable();
 
             $table->foreign('idCliente')->references('id')->on('cliente');
             $table->foreign('idTipoOrden')->references('id')->on('tipo_orden');

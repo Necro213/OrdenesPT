@@ -85,10 +85,14 @@ Route::post('/delete/orden/{id}',[
     'uses' => 'WebController@deleteOrden'
 ]);
 
-Route::get('/getordenes/empleado',[
+Route::get('/getordenes/empleado/{id}',[
     'uses' => 'WebController@getOrdenesEmpleado'
 ]);
 
 Route::post('/setorden/{id}',[
     'uses' => 'WebController@checkOrden'
+]);
+
+Route::post('/cerrar/{id}',[
+    'uses' => 'WebController@cerrar'
 ]);

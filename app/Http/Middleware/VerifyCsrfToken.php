@@ -22,7 +22,8 @@ class VerifyCsrfToken extends BaseVerifier
         '/alta/orden',
         '/edit/orden/*',
         '/delete/orden/*',
-        '/setorden/*'
+        '/setorden/*',
+        'cerrar/*'
 
     ];
 }

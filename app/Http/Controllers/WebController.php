@@ -18,7 +18,7 @@ class WebController extends Controller
 
             if($user != null){
                 if($user->password == $request->password){
-                    return Response::json(["code"=>"201"]);
+                    return Response::json(["code"=>"201",'id'=>$user->id]);
                 }else{
                     return Response::json(["code"=>"404"]);
                 }
@@ -26,7 +26,7 @@ class WebController extends Controller
                 $user =  Empleado::where('usuario', 'ilike', $request->usuario)->first();
                 if($user != null){
                     if($user->password == $request->password){
-                        return Response::json(["code"=>"202"]);
+                        return Response::json(["code"=>"202",'id'=>$user->id]);
                     }else{
                         return Response::json(["code"=>"404"]);
                     }
@@ -173,8 +173,8 @@ class WebController extends Controller
     function altaOrden(Request $request){
         try{
             $orden = new Orden;
-
-            $orden->idCliente = $request->cliente;
+        
+            $orden->idCliente = $request->cliente['id'];
             $orden->idTipoOrden = $request->tipo;
             $orden->idEmpleado = $request->empleado;
             $orden->fecha_programada = $request->fecha;
@@ -182,6 +182,9 @@ class WebController extends Controller
             $orden->descripcion = $request->desc;
             $orden->fotos = "";
             $orden->firma = "";
+            $orden->cerrada = false;
+            $orden->precio = $request->precio;
+            $orden->comentarios = "";
 
             $orden->save();
             return Response::json(["code"=>"200"]);
@@ -192,7 +195,17 @@ class WebController extends Controller
 
     function getOrdenes(){
         try{
-            $Ordens = Orden::all();
+            $Ordens = Orden::orderBy('fecha_programada',"DESC")->orderBy('hora_programada','DESC')->get();
+            foreach($Ordens as $item) {
+                if($item->cerrada==true){
+                    $item->color = "secondary";
+                }else{
+                    $item->color = "light";
+                }
+
+            }
+
+            
             return Response::json(["code"=>"200",'ordenes'=>$Ordens]);
         }catch (Exception $e){
             return Response::json(["code"=>500, "error"=>$e->getMessage()]);
@@ -202,6 +215,16 @@ class WebController extends Controller
     function getOrden($id){
         try{
             $Orden = Orden::where('id', '=', $id)->first();
+            $fotos = explode(',',$Orden->fotos);
+            $i = 0;
+            $Orden->fotos = "";
+            foreach ($fotos as $item) {
+                if($i!=0){
+                    $foto = public_path().'/img/S'.$id.'/'.$i.'.jpg';
+                    $Orden->fotos = $Orden->fotos.base64_encode(file_get_contents($foto)).',';
+                }
+                $i++;
+            }
             return Response::json($Orden);
         }catch(Exception $e){
             return Response::json(["code"=>500, "error"=>$e->getMessage()]);
@@ -219,6 +242,7 @@ class WebController extends Controller
             $orden->fecha_programada = $request->fecha;
             $orden->hora_programada = $request->hora;
             $orden->descripcion = $request->desc;
+            $orden->precio = $request->precio;
 
             $orden->save();
             return Response::json(["code"=>"200"]);
@@ -237,9 +261,21 @@ class WebController extends Controller
         }
     }
 
-    function getOrdenesEmpleado(){
+    function getOrdenesEmpleado($id){
         try{
-            $Ordens = Orden::where('firma','like','')->get();
+            
+            $Ordens = Orden::where('idEmpleado','=',$id)->orderBy('cerrada','ASC')
+            ->orderBy('fecha_programada','DESC')
+            ->orderBy('fecha_programada',"DESC")
+            ->get();
+            foreach($Ordens as $item) {
+                if($item->cerrada==true){
+                    $item->color = "secondary";
+                }else{
+                    $item->color = "light";
+                }
+
+            }
             return Response::json(["code"=>"200",'ordenes'=>$Ordens]);
         }catch (Exception $e){
             return Response::json(["code"=>500, "error"=>$e->getMessage()]);
@@ -253,14 +289,21 @@ class WebController extends Controller
                 $i = 0;
                 $fotos = "";
 
-                mkdir(public_path().'/img/S'.$id,0777,true);
+                if(!file_exists(public_path().'/img/S'.$id)){
+                mkdir(public_path().'/img/S'.$id,0777,true);}
+                $fi = glob(public_path()."/img/S".$id."/*.*");
+                $count = count($fi);
+        
             foreach($request->photos as $item) {
                 $i++;
+                if($i>$count){
                 $this->base64_to_jpeg($item, public_path()."/img/S" . $id . '/' . $i.'.jpg');
+                }
                 $fotos = $fotos.$i.'.jpg,';
             }
             $orden->fotos = $fotos;
-            $orden->firma = "true";
+            //$orden->comentarios = $request->comentarios;
+            
             $orden->save();
             return Response::json(["code"=>"200",'data'=>$request->photos]);
         }catch(Exception $e){
@@ -284,5 +327,21 @@ class WebController extends Controller
         fclose( $ifp ); 
     
         return $output_file; 
+    }
+
+    function cerrar($id,Request $request){
+        try{
+
+            $orden = Orden::where('id', '=', $id)->first();
+
+            $orden->comentarios = $request->comentarios;
+            $orden->cerrada = true;
+    
+            $orden->save();
+            return Response::json(["code"=>"200"]);
+        }catch(Exception $e){
+            return Response::json(["code"=>500, "error"=>$e->getMessage()]);
+        }
+      
     }
 }
