@@ -334,6 +334,15 @@ class WebController extends Controller
 
             $orden = Orden::where('id', '=', $id)->first();
 
+           
+
+            if(!file_exists(public_path().'/img/S'.$id)){
+            mkdir(public_path().'/img/S'.$id,0777,true);}
+       
+            $this->base64_to_jpeg($request->firma, public_path()."/img/S" . $id . '/firma.png');
+            
+            $orden->firma = "firma.png";
+
             $orden->comentarios = $request->comentarios;
             $orden->cerrada = true;
     
