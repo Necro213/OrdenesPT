@@ -225,6 +225,10 @@ class WebController extends Controller
                 }
                 $i++;
             }
+            if(file_get_contents(public_path().'/img/S'.$id.'/firma.png') != null){
+            $Orden->firma = base64_encode(file_get_contents(public_path().'/img/S'.$id.'/firma.png'));
+            }
+
             return Response::json($Orden);
         }catch(Exception $e){
             return Response::json(["code"=>500, "error"=>$e->getMessage()]);
