@@ -96,3 +96,6 @@ Route::post('/setorden/{id}',[
 Route::post('/cerrar/{id}',[
     'uses' => 'WebController@cerrar'
 ]);
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

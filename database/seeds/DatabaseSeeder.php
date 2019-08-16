@@ -14,11 +14,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        Admin::create([
-            "id" => 1,
-            "usuario" => 'admin',
-            "password" => '1234'
-        ]);
+
+        $this->call(UserTableSeeder::class);
+        $this->call(RoleTableSeeder::class);
 
         TipoEmpleado::create([
             "id"=> 1,
